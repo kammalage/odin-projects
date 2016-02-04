@@ -77,19 +77,19 @@ module Hangman
 		end
 
 		def check_input(guess)
-			if guess.upcase! == @guess_word
-				puts "YOU WON!"
+			guess.upcase!
+			check_win(guess)
+			
+			letter = guess
+			if check_bounds(letter) and match_input(letter)
+				puts "Correct input"
+				puts "#{letter}"
+				compare_letter(letter)
 			else
-				letter = guess
-				if check_bounds(letter) and match_input(letter)
-					puts "Correct input"
-					puts "#{letter}"
-					compare_letter(letter)
-				else
-					puts "Incorrect input, try again."
-					puts "#{letter}"
-				end	
-			end
+				puts "Incorrect input, try again."
+				puts "#{letter}"
+			end	
+			
 		end
 
 		def match_input(letter)
@@ -121,6 +121,25 @@ module Hangman
 			end
 		end
 
+		def check_win(full_guess = nil)
+			unless full_guess.nil?
+				if full_guess == @guess_word
+					puts "YOU WIN!"
+					exit
+				end
+			else 
+				if @guess_area.join("") == @guess_word
+					puts "YOU WIN!"
+					puts "It was #{@guess_word}."
+					exit
+				elsif @attempts.empty?
+					puts "YOU LOSE!"
+					puts "The correct answer is #{@guess_word}."
+					exit
+				end
+			end
+		end
+
 		def add_used_letter(letter)
 			unless @used_letters.include?(letter)
 				@used_letters << letter
@@ -140,7 +159,7 @@ module Hangman
 		def play
 			puts ""
 			puts " Welcome to Hangman! Try to guess the word correctly, but you only get six tries!"
-			puts " To enter a guess just enter a single letter."
+			display_rules
 			print_tab
 			puts ""
 			puts " Good Luck!"
@@ -151,10 +170,14 @@ module Hangman
 			print "Enter guess: "
 			guess = gets.chomp
 			check_input(guess)
+			check_win
 			end
 		end
 
-
+		def display_rules
+			puts " To enter a guess just enter a single letter."
+			puts " If you know the answer type in the complete word."
+		end
 	end
 end
 player_one = Hangman::Player.new("Shan")
