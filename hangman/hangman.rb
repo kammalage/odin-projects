@@ -10,19 +10,20 @@ module Hangman
 	end
 
 	class Game
-		attr_accessor :dictionary, :player, :guess_word, :attempts, :used_letters, :guess_area
+		attr_accessor :dictionary, :player, :guess_word, :attempts, :used_letters,:max_attempts, :guess_area
 
 		def initialize(player)
 			@player = player
 			@used_letters = []
-			@attempts = Array.new(6,"*");
+			@max_attempts = 10
+			@attempts = Array.new(10,"*");
 			load_dictionary
 			pick_word
 			set_guess_area
 		end
 
 		def load_dictionary
-			@dictionary = File.open("test.txt", "r").read.split
+			@dictionary = File.open("5desk.txt", "r").read.split
 		end
 
 		def pick_word
@@ -112,7 +113,6 @@ module Hangman
 		def compare_letter(letter)
 			guess_letters = @guess_word.split("")
 			if guess_letters.include?(letter)
-				#do something
 				guess_letters.each_with_index do |correct_letter, index|
 					if correct_letter == letter
 						@guess_area[index] = letter
@@ -120,9 +120,12 @@ module Hangman
 				end
 				add_used_letter(letter)
 			else
-				# do something else
-				add_used_letter(letter)
-				remove_attempt
+				unless @used_letters.include?(letter)
+					add_used_letter(letter)
+					remove_attempt
+				else
+					puts "You already entered that. Try again."
+				end
 			end
 		end
 
@@ -190,12 +193,13 @@ module Hangman
 			@guess_area = loaded_game.guess_area
 			@attempts = loaded_game.attempts
 			@used_letters = loaded_game.used_letters
+			@max_attempts = loaded_game.max_attempts
 		end
 
 
 		def play
 			puts ""
-			puts " Welcome to Hangman! Try to guess the word correctly, but you only get six tries!"
+			puts " Welcome to Hangman! Try to guess the word correctly, but you only get #{@max_attempts} tries!"
 			display_rules
 			print_tab
 			puts ""
