@@ -1,0 +1,34 @@
+--- !ruby/object:Hangman::Game
+player: !ruby/object:Hangman::Player
+  name: Shan
+used_letters:
+- A
+- L
+- T
+- S
+attempts:
+- "*"
+- "*"
+- "*"
+- "*"
+dictionary:
+- abandonment
+- devour
+- informative
+- sliest
+- zooplankton
+- cat
+- subdermatoglyphic
+guess_word: ABANDONMENT
+guess_area:
+- A
+- _
+- A
+- _
+- _
+- _
+- _
+- _
+- _
+- _
+- T

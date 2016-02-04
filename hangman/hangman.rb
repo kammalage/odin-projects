@@ -1,3 +1,5 @@
+require 'yaml'
+
 module Hangman
 	class Player
 		attr_accessor :name
@@ -8,7 +10,7 @@ module Hangman
 	end
 
 	class Game
-		attr_accessor :dictionary, :player, :guess_word, :attempts, :used_letters
+		attr_accessor :dictionary, :player, :guess_word, :attempts, :used_letters, :guess_area
 
 		def initialize(player)
 			@player = player
@@ -77,17 +79,20 @@ module Hangman
 		end
 
 		def check_input(guess)
-			guess.upcase!
+			guess
 			check_win(guess)
 			
 			letter = guess
 			if check_bounds(letter) and match_input(letter)
-				puts "Correct input"
-				puts "#{letter}"
+				puts "You entered #{letter}"
 				compare_letter(letter)
+			elsif guess == "SAVE_GAME"
+				save_game
+			elsif guess == "LOAD_GAME"
+				load_game
 			else
 				puts "Incorrect input, try again."
-				puts "#{letter}"
+				puts "You entered #{letter}"
 			end	
 			
 		end
@@ -125,6 +130,7 @@ module Hangman
 			unless full_guess.nil?
 				if full_guess == @guess_word
 					puts "YOU WIN!"
+					puts "It was #{@guess_word}."
 					exit
 				end
 			else 
@@ -156,6 +162,37 @@ module Hangman
 			puts ""
 		end
 
+		def display_rules
+			puts " To enter a guess just enter a single letter."
+			puts " If you know the answer type in the complete word."
+			puts " To save your game enter 'save_game'."
+			puts " To load your game enter 'load_game'."
+		end
+
+		def save_game
+			puts "Saving..."
+			yaml = YAML::dump(self)
+			File.open("saves/#{@player.name}_save.yaml","w") { |f| f.write(yaml)}
+			puts "Saved"
+		end
+
+		def load_game
+			puts "Loading..."
+			save_file = File.open("saves/#{@player.name}_save.yaml","r")
+			yaml = save_file.read
+			loaded_game = YAML::load(yaml)
+			load_elements(loaded_game)
+		end
+
+		def load_elements(loaded_game)
+			@guess_word = loaded_game.guess_word
+			@player = loaded_game.player
+			@guess_area = loaded_game.guess_area
+			@attempts = loaded_game.attempts
+			@used_letters = loaded_game.used_letters
+		end
+
+
 		def play
 			puts ""
 			puts " Welcome to Hangman! Try to guess the word correctly, but you only get six tries!"
@@ -168,15 +205,10 @@ module Hangman
 			while true
 			print_board
 			print "Enter guess: "
-			guess = gets.chomp
+			guess = gets.chomp.upcase
 			check_input(guess)
 			check_win
 			end
-		end
-
-		def display_rules
-			puts " To enter a guess just enter a single letter."
-			puts " If you know the answer type in the complete word."
 		end
 	end
 end
