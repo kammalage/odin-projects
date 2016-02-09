@@ -1,12 +1,10 @@
 --- !ruby/object:Hangman::Game
 player: !ruby/object:Hangman::Player
   name: Shan
-used_letters:
-- A
-- L
-- T
-- S
+used_letters: []
 attempts:
+- "*"
+- "*"
 - "*"
 - "*"
 - "*"
@@ -19,13 +17,15 @@ dictionary:
 - zooplankton
 - cat
 - subdermatoglyphic
-guess_word: ABANDONMENT
+guess_word: SLIEST
 guess_area:
-- A
-- _
-- A
 - _
 - _
+- _
+- _
+- _
+- _
+_
 - _
 - _
 - _
