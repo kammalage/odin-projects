@@ -1,3 +1,5 @@
+require 'yaml'
+
 module Hangman
 	class Player
 		attr_accessor :name
@@ -8,19 +10,20 @@ module Hangman
 	end
 
 	class Game
-		attr_accessor :dictionary, :player, :guess_word, :attempts, :used_letters
+		attr_accessor :dictionary, :player, :guess_word, :attempts, :used_letters,:max_attempts, :guess_area
 
 		def initialize(player)
 			@player = player
 			@used_letters = []
-			@attempts = Array.new(6,"*");
+			@max_attempts = 10
+			@attempts = Array.new(10,"*");
 			load_dictionary
 			pick_word
 			set_guess_area
 		end
 
 		def load_dictionary
-			@dictionary = File.open("test.txt", "r").read.split
+			@dictionary = File.open("5desk.txt", "r").read.split
 		end
 
 		def pick_word
@@ -77,19 +80,22 @@ module Hangman
 		end
 
 		def check_input(guess)
-			if guess.upcase! == @guess_word
-				puts "YOU WON!"
+			guess
+			check_win(guess)
+			
+			letter = guess
+			if check_bounds(letter) and match_input(letter)
+				puts "You entered #{letter}"
+				compare_letter(letter)
+			elsif guess == "SAVE_GAME"
+				save_game
+			elsif guess == "LOAD_GAME"
+				load_game
 			else
-				letter = guess
-				if check_bounds(letter) and match_input(letter)
-					puts "Correct input"
-					puts "#{letter}"
-					compare_letter(letter)
-				else
-					puts "Incorrect input, try again."
-					puts "#{letter}"
-				end	
-			end
+				puts "Incorrect input, try again."
+				puts "You entered #{letter}"
+			end	
+			
 		end
 
 		def match_input(letter)
@@ -107,7 +113,6 @@ module Hangman
 		def compare_letter(letter)
 			guess_letters = @guess_word.split("")
 			if guess_letters.include?(letter)
-				#do something
 				guess_letters.each_with_index do |correct_letter, index|
 					if correct_letter == letter
 						@guess_area[index] = letter
@@ -115,9 +120,32 @@ module Hangman
 				end
 				add_used_letter(letter)
 			else
-				# do something else
-				add_used_letter(letter)
-				remove_attempt
+				unless @used_letters.include?(letter)
+					add_used_letter(letter)
+					remove_attempt
+				else
+					puts "You already entered that. Try again."
+				end
+			end
+		end
+
+		def check_win(full_guess = nil)
+			unless full_guess.nil?
+				if full_guess == @guess_word
+					puts "YOU WIN!"
+					puts "It was #{@guess_word}."
+					exit
+				end
+			else 
+				if @guess_area.join("") == @guess_word
+					puts "YOU WIN!"
+					puts "It was #{@guess_word}."
+					exit
+				elsif @attempts.empty?
+					puts "YOU LOSE!"
+					puts "The correct answer is #{@guess_word}."
+					exit
+				end
 			end
 		end
 
@@ -137,10 +165,42 @@ module Hangman
 			puts ""
 		end
 
+		def display_rules
+			puts " To enter a guess just enter a single letter."
+			puts " If you know the answer type in the complete word."
+			puts " To save your game enter 'save_game'."
+			puts " To load your game enter 'load_game'."
+		end
+
+		def save_game
+			puts "Saving..."
+			yaml = YAML::dump(self)
+			File.open("saves/#{@player.name}_save.yaml","w") { |f| f.write(yaml)}
+			puts "Saved"
+		end
+
+		def load_game
+			puts "Loading..."
+			save_file = File.open("saves/#{@player.name}_save.yaml","r")
+			yaml = save_file.read
+			loaded_game = YAML::load(yaml)
+			load_elements(loaded_game)
+		end
+
+		def load_elements(loaded_game)
+			@guess_word = loaded_game.guess_word
+			@player = loaded_game.player
+			@guess_area = loaded_game.guess_area
+			@attempts = loaded_game.attempts
+			@used_letters = loaded_game.used_letters
+			@max_attempts = loaded_game.max_attempts
+		end
+
+
 		def play
 			puts ""
-			puts " Welcome to Hangman! Try to guess the word correctly, but you only get six tries!"
-			puts " To enter a guess just enter a single letter."
+			puts " Welcome to Hangman! Try to guess the word correctly, but you only get #{@max_attempts} tries!"
+			display_rules
 			print_tab
 			puts ""
 			puts " Good Luck!"
@@ -149,12 +209,11 @@ module Hangman
 			while true
 			print_board
 			print "Enter guess: "
-			guess = gets.chomp
+			guess = gets.chomp.upcase
 			check_input(guess)
+			check_win
 			end
 		end
-
-
 	end
 end
 player_one = Hangman::Player.new("Shan")
